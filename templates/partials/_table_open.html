@@ -1,0 +1,17 @@
+{% comment %}
+Opens a responsive, horizontally-scrollable table. Pair with _table_close.html.
+`headers` = list of column labels. Emit <tr>…</tr> rows between the two.
+{% endcomment %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            {% if headers %}
+            <thead class="bg-gray-50">
+                <tr>
+                    {% for h in headers %}
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">{{ h }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            {% endif %}
+            <tbody class="divide-y divide-gray-100">

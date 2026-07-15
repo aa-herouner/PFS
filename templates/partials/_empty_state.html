@@ -1,0 +1,14 @@
+{% comment %}
+Empty-state placeholder for lists with no rows yet. Usage:
+  {% include 'partials/_empty_state.html' with message='No batches yet.' action_url=url action_label='Add batch' %}
+{% endcomment %}
+<div class="text-center py-12 px-4">
+    <div class="text-4xl mb-2">🪹</div>
+    <p class="text-gray-500">{{ message|default:'Nothing here yet.' }}</p>
+    {% if action_url and action_label %}
+    <a href="{{ action_url }}"
+       class="mt-4 inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">
+        {{ action_label }}
+    </a>
+    {% endif %}
+</div>

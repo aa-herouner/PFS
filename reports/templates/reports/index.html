@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports · Poultry Farm Record System{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Reports' subtitle='View, print or export farm reports.' %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for slug, label in reports.items %}
+    <a href="{% url 'report_detail' slug %}"
+       class="block bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:border-emerald-400 hover:shadow transition">
+        <p class="font-semibold text-gray-900">{{ label }}</p>
+        <p class="text-sm text-gray-500 mt-1">View with date filters; export to Excel or PDF.</p>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

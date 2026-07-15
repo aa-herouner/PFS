@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} · Flocks{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title=title %}
+
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+     x-data='batchCode({{ form.suggested_codes|safe }}, {% if form.instance.pk %}false{% else %}true{% endif %})'>
+    <form method="post" @change="onChange($event)">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="mb-4 text-sm text-red-600">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            {% for field in form %}
+                {% include 'partials/_form_field.html' %}
+            {% endfor %}
+        </div>
+        <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Save</button>
+            <a href="{% url 'batch_list' %}" class="text-sm text-gray-600 hover:underline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function batchCode(suggestions, isNew) {
+    return {
+        suggestions: suggestions,   // { birdType: "BRO-2026-001" }
+        isNew: isNew,
+        lastSuggested: null,        // last code we auto-filled, to detect manual edits
+        init() {
+            if (!this.isNew) return;
+            // Prefill from whichever bird type is initially selected.
+            this.fill();
+        },
+        onChange(e) {
+            if (this.isNew && e.target.id === 'id_bird_type') this.fill();
+        },
+        fill() {
+            const type = document.getElementById('id_bird_type');
+            const code = document.getElementById('id_batch_code');
+            if (!type || !code) return;
+            const next = this.suggestions[type.value];
+            if (next === undefined) return;
+            const untouched = code.value === '' || code.value === this.lastSuggested;
+            if (untouched) code.value = next;
+            this.lastSuggested = next;
+        },
+    };
+}
+</script>
+{% endblock %}

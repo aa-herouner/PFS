@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings · Poultry Farm Record System{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Settings' subtitle='Reference data used across the system.' %}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% with card='block bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:border-emerald-400 hover:shadow transition' %}
+    <a href="{% url 'breed_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Breeds</p>
+        <p class="text-sm text-gray-500 mt-1">Layer / broiler / breeder breeds.</p>
+    </a>
+    <a href="{% url 'pen_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Pens</p>
+        <p class="text-sm text-gray-500 mt-1">Housing units and capacities.</p>
+    </a>
+    <a href="{% url 'feedtype_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Feed types</p>
+        <p class="text-sm text-gray-500 mt-1">Starter, grower, layer mash, etc.</p>
+    </a>
+    <a href="{% url 'expensecategory_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Expense categories</p>
+        <p class="text-sm text-gray-500 mt-1">For classifying expenses.</p>
+    </a>
+    <a href="{% url 'incomecategory_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Income categories</p>
+        <p class="text-sm text-gray-500 mt-1">For classifying income.</p>
+    </a>
+    <a href="{% url 'schedule_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Vaccination schedule</p>
+        <p class="text-sm text-gray-500 mt-1">When vaccines are due by age.</p>
+    </a>
+    <a href="{% url 'user_list' %}" class="{{ card }}">
+        <p class="font-semibold text-gray-900">Users</p>
+        <p class="text-sm text-gray-500 mt-1">Accounts and roles.</p>
+    </a>
+    {% endwith %}
+</div>
+{% endblock %}

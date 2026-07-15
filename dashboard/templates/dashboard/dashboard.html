@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load reference_extras %}
+
+{% block title %}Dashboard · Poultry Farm Record System{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Dashboard' subtitle='Farm overview.' %}
+
+<!-- Alerts -->
+{% if alerts %}
+<div class="space-y-2 mb-6" x-data="dashboardAlerts()">
+    {% for a in alerts %}
+    <div x-show="!isDismissed('{{ a.message|escapejs }}')" x-cloak
+        class="flex items-center gap-2 px-4 py-2 rounded text-sm
+        {% if a.level == 'danger' %}bg-red-50 text-red-700 border border-red-200
+        {% else %}bg-amber-50 text-amber-700 border border-amber-200{% endif %}">
+        <span class="font-medium">{% if a.level == 'danger' %}⚠{% else %}⚑{% endif %}</span>
+        <span class="flex-1">{{ a.message }}</span>
+        <button type="button" @click="dismiss('{{ a.message|escapejs }}')"
+                title="Dismiss this alert (reappears if the condition recurs)"
+                class="shrink-0 -mr-1 rounded p-1 opacity-60 hover:opacity-100 hover:bg-black/5"
+                aria-label="Dismiss alert">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- KPI cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {% include 'partials/_stat_card.html' with label='Live birds' value=kpis.total_birds hint='active batches' %}
+    {% include 'partials/_stat_card.html' with label='Active batches' value=kpis.active_batches %}
+    {% include 'partials/_stat_card.html' with label='Mortality rate' value=kpis.mortality_rate hint='% incl. culls' %}
+    {% include 'partials/_stat_card.html' with label='Eggs today' value=kpis.eggs_today hint=eggs_week_hint %}
+    {% include 'partials/_stat_card.html' with label='Broiler avg weight' value=kpis.broiler_avg_weight|default:'—' hint='kg (latest)' %}
+    {% include 'partials/_stat_card.html' with label='MTD income' value=kpis.mtd.income|money %}
+    {% include 'partials/_stat_card.html' with label='MTD expense' value=kpis.mtd.expense|money %}
+    {% include 'partials/_stat_card.html' with label='MTD profit' value=kpis.mtd.profit|money %}
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">Egg production (30 days)</h2>
+        <canvas id="eggChart" height="140"></canvas>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">Mortality (30 days)</h2>
+        <canvas id="mortChart" height="140"></canvas>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">Expense by category</h2>
+        <canvas id="expChart" height="140"></canvas>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">Feed stock</h2>
+        {% if feed_stock %}
+        <div class="space-y-2">
+            {% for row in feed_stock %}
+            <div class="flex justify-between text-sm">
+                <span>{{ row.feed_type.name }}</span>
+                <span class="{% if row.low %}text-red-600 font-semibold{% endif %}">{{ row.level }} {{ row.feed_type.unit }}{% if row.low %} · LOW{% endif %}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-400">No feed types defined.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Dismissable dashboard alerts. Dismissals persist in the browser keyed by the
+// alert's message (which embeds the varying data), so an alert stays hidden on
+// reload "until it recurs" — a changed condition yields a new message and shows
+// again. Stored keys not in the current alert set are pruned so a resolved-then-
+// returned condition reappears.
+function dashboardAlerts() {
+    const STORAGE_KEY = 'pfs.dismissedAlerts';
+    const current = [{% for a in alerts %}'{{ a.message|escapejs }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+    return {
+        dismissed: [],
+        init() {
+            let stored = [];
+            try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { stored = []; }
+            // Keep only dismissals that still match a currently-shown alert.
+            this.dismissed = stored.filter(m => current.includes(m));
+            this.save();
+        },
+        isDismissed(message) { return this.dismissed.includes(message); },
+        dismiss(message) {
+            if (!this.dismissed.includes(message)) this.dismissed.push(message);
+            this.save();
+        },
+        save() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.dismissed)); } catch (e) {}
+        },
+    };
+}
+</script>
+
+{{ egg_trend|json_script:"egg-data" }}
+{{ mortality_trend|json_script:"mort-data" }}
+{{ expense_breakdown|json_script:"exp-data" }}
+<script>
+(function () {
+    if (typeof Chart === 'undefined') return;
+    const line = (id, labels, label, values, color) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        new Chart(el, {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: label, data: values, borderColor: color, tension: 0.3 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+    };
+    const egg = JSON.parse(document.getElementById('egg-data').textContent);
+    line('eggChart', egg.labels, 'Eggs', egg.eggs, '#059669');
+    const mort = JSON.parse(document.getElementById('mort-data').textContent);
+    line('mortChart', mort.labels, 'Mortality', mort.counts, '#dc2626');
+
+    const exp = JSON.parse(document.getElementById('exp-data').textContent);
+    const expEl = document.getElementById('expChart');
+    if (expEl && exp.length) {
+        new Chart(expEl, {
+            type: 'doughnut',
+            data: {
+                labels: exp.map(r => r.category),
+                datasets: [{ data: exp.map(r => Number(r.total)),
+                    backgroundColor: ['#059669','#0ea5e9','#d97706','#dc2626','#7c3aed','#64748b'] }]
+            },
+            options: { responsive: true }
+        });
+    }
+})();
+</script>
+{% endblock %}

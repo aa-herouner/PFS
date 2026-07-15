@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} · Finance{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title=title %}
+
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+     x-data="{ txnType: '{{ form.type.value|default:'' }}' }">
+    <p class="text-xs text-gray-400 mb-4">For an egg/bird/spent-hen/manure sale, choose Income. Tick "bird sale" and pick a batch to reduce its bird count.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="mb-4 text-sm text-red-600">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            <div @change="txnType = document.getElementById('id_type').value;
+                          if (txnType !== 'INCOME') {
+                              const bs = document.getElementById('id_is_bird_sale');
+                              if (bs) bs.checked = false;
+                          }">
+                {% include 'partials/_form_field.html' with field=form.type %}
+            </div>
+            {% include 'partials/_form_field.html' with field=form.date %}
+            {% include 'partials/_form_field.html' with field=form.amount %}
+            {# Category matches the type: only the relevant one is shown. #}
+            <div x-show="txnType === 'INCOME'">
+                {% include 'partials/_form_field.html' with field=form.income_category %}
+            </div>
+            <div x-show="txnType === 'EXPENSE'">
+                {% include 'partials/_form_field.html' with field=form.expense_category %}
+            </div>
+        </div>
+        {# Bird-sale details only apply to income. #}
+        <div x-show="txnType === 'INCOME'" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 border-t border-gray-100 pt-4 mt-2">
+            {% include 'partials/_form_field.html' with field=form.is_bird_sale %}
+            {% include 'partials/_form_field.html' with field=form.batch %}
+            {% include 'partials/_form_field.html' with field=form.quantity %}
+            {% include 'partials/_form_field.html' with field=form.unit_price %}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+            {% include 'partials/_form_field.html' with field=form.party %}
+            {% include 'partials/_form_field.html' with field=form.description %}
+        </div>
+        <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Save</button>
+            <a href="{% url 'transaction_list' %}" class="text-sm text-gray-600 hover:underline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

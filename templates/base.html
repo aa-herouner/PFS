@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Poultry Farm Record System{% endblock %}</title>
+
+    {# Tailwind Play CDN for dev; replace with compiled CSS for prod. #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {# Alpine.js for lightweight interactivity #}
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {# Chart.js for dashboard charts #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>[x-cloak] { display: none !important; }</style>
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="h-full bg-gray-100 text-gray-800">
+<div class="min-h-full" x-data="{ sidebarOpen: false }">
+
+    <!-- Top bar -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <div class="flex items-center justify-between px-4 h-14">
+            <div class="flex items-center gap-3">
+                {% if user.is_authenticated %}
+                <button @click="sidebarOpen = !sidebarOpen"
+                        class="md:hidden p-2 rounded hover:bg-gray-100"
+                        aria-label="Toggle navigation">
+                    <span class="block w-5 h-0.5 bg-gray-700 mb-1"></span>
+                    <span class="block w-5 h-0.5 bg-gray-700 mb-1"></span>
+                    <span class="block w-5 h-0.5 bg-gray-700"></span>
+                </button>
+                {% endif %}
+                <span class="font-semibold text-lg text-emerald-700">🐔 Poultry Records</span>
+            </div>
+            <div class="text-sm text-gray-600">
+                {% if user.is_authenticated %}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="flex items-center gap-2 hover:text-gray-900">
+                        <span>{{ user }}</span>
+                        <span class="text-xs text-gray-400">{{ user.get_role_display }}</span>
+                        <span class="text-xs">&#9662;</span>
+                    </button>
+                    <div x-show="open" @click.outside="open = false" x-cloak
+                         class="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded shadow-lg py-1 z-40">
+                        <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-gray-50">My profile</a>
+                        {% if user.is_owner or user.is_superuser %}
+                        <a href="{% url 'user_list' %}" class="block px-4 py-2 hover:bg-gray-50">Manage users</a>
+                        {% endif %}
+                        <form method="post" action="{% url 'logout' %}" class="border-t border-gray-100 mt-1 pt-1">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-50 text-red-600">Log out</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-emerald-700 hover:underline">Log in</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="flex">
+        <!-- Sidebar (only for authenticated users) -->
+        {% if user.is_authenticated %}
+        <aside class="bg-white border-r border-gray-200 w-56 shrink-0 md:block"
+               :class="sidebarOpen ? 'block' : 'hidden'">
+            <nav class="p-3 space-y-1 text-sm">
+                {% include 'partials/_nav.html' %}
+            </nav>
+        </aside>
+        {% endif %}
+
+        <!-- Content -->
+        <main class="flex-1 p-4 md:p-6 w-full max-w-7xl mx-auto">
+            {% include 'partials/_messages.html' %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+</body>
+</html>

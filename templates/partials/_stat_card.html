@@ -1,0 +1,9 @@
+{% comment %}
+KPI / stat tile for the dashboard. Usage:
+  {% include 'partials/_stat_card.html' with label='Live birds' value=1240 hint='3 active batches' %}
+{% endcomment %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+    <p class="text-sm font-medium text-gray-500">{{ label }}</p>
+    <p class="mt-1 text-2xl font-semibold text-gray-900">{{ value }}</p>
+    {% if hint %}<p class="mt-1 text-xs text-gray-400">{{ hint }}</p>{% endif %}
+</div>

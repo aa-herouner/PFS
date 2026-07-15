@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load reference_extras %}
+
+{% block title %}{{ batch.batch_code }} · Flocks{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+    <div>
+        <h1 class="text-2xl font-semibold text-gray-900">{{ batch.batch_code }}</h1>
+        <p class="text-gray-500 mt-1">
+            {{ batch.breed.name }} · {{ batch.get_bird_type_display }} ·
+            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium
+                {% if batch.status == 'ACTIVE' %}bg-emerald-100 text-emerald-700
+                {% elif batch.status == 'SOLD' %}bg-blue-100 text-blue-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">{{ batch.get_status_display }}</span>
+        </p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'mortality_add' batch.pk %}"
+           class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Record mortality</a>
+        <a href="{% url 'feed_consumption_add' batch.pk %}"
+           class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Record feed</a>
+        <a href="{% url 'health_add' batch.pk %}"
+           class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Record health</a>
+        <a href="{% url 'production_add' batch.pk %}"
+           class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Record production</a>
+        {% if user.is_owner or user.is_manager or user.is_superuser %}
+        <a href="{% url 'batch_edit' batch.pk %}"
+           class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Edit</a>
+        <div class="relative" x-data="{ open: false }" @keydown.escape="open = false">
+            <button type="button" @click="open = !open" @click.away="open = false"
+                    class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded inline-flex items-center gap-1">
+                Status
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div x-show="open" x-transition x-cloak
+                 class="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 text-left">
+                <p class="px-4 py-1 text-xs text-gray-400">Change flock status</p>
+                {% if batch.status != 'ACTIVE' %}
+                <form method="post" action="{% url 'batch_status' batch.pk %}">{% csrf_token %}
+                    <input type="hidden" name="status" value="ACTIVE">
+                    <button class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">Reopen (Active)</button>
+                </form>
+                {% endif %}
+                {% if batch.status != 'SOLD' %}
+                <form method="post" action="{% url 'batch_status' batch.pk %}">{% csrf_token %}
+                    <input type="hidden" name="status" value="SOLD">
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Mark Sold</button>
+                </form>
+                {% endif %}
+                {% if batch.status != 'DEPOPULATED' %}
+                <form method="post" action="{% url 'batch_status' batch.pk %}">{% csrf_token %}
+                    <input type="hidden" name="status" value="DEPOPULATED">
+                    <button class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Close / Depopulate</button>
+                </form>
+                {% endif %}
+                <p class="px-4 pt-1 pb-2 text-xs text-gray-400 border-t border-gray-100 mt-1">History and finance are kept.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    {% include 'partials/_stat_card.html' with label='Current birds' value=batch.current_quantity hint=current_birds_hint %}
+    {% include 'partials/_stat_card.html' with label='Age' value=batch.age_in_weeks hint='weeks' %}
+    {% include 'partials/_stat_card.html' with label='Mortality rate' value=batch.mortality_rate hint='% incl. culls' %}
+    {% include 'partials/_stat_card.html' with label='Acquisition cost' value=batch.total_cost|money hint='initial × unit cost' %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Batch info -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:col-span-1">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Details</h2>
+        <dl class="text-sm space-y-2">
+            <div class="flex justify-between"><dt class="text-gray-500">Supplier</dt><dd>{{ batch.supplier|default:'—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Acquired</dt><dd>{{ batch.date_acquired }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Pen</dt><dd>{{ batch.pen.name|default:'—' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Unit cost</dt><dd>{{ batch.unit_cost|money }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Mortality</dt><dd>{{ batch.total_mortality }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Culls</dt><dd>{{ batch.total_culls }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Feed consumed</dt><dd>{{ batch.total_feed_consumed }} kg</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Health cost</dt><dd>{{ batch.total_health_cost|money }}</dd></div>
+        </dl>
+        {% if batch.notes %}<p class="text-sm text-gray-600 mt-4 pt-4 border-t border-gray-100">{{ batch.notes }}</p>{% endif %}
+    </div>
+
+    <!-- Mortality log -->
+    <div class="lg:col-span-2">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Recent mortality &amp; culls</h2>
+        {% if mortality_records %}
+            {% include 'partials/_table_open.html' with headers=mortality_headers %}
+            {% for m in mortality_records %}
+            <tr>
+                <td class="px-4 py-3 whitespace-nowrap">{{ m.date }}</td>
+                <td class="px-4 py-3 whitespace-nowrap">{{ m.get_record_type_display }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-right">{{ m.quantity }}</td>
+                <td class="px-4 py-3">{{ m.cause|default:'—' }}</td>
+                {% if can_manage %}
+                <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+                    <a href="{% url 'mortality_edit' m.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+                    <a href="{% url 'mortality_delete' m.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% include 'partials/_table_close.html' %}
+        {% else %}
+            {% include 'partials/_empty_state.html' with message='No mortality recorded yet.' %}
+        {% endif %}
+
+        <!-- Health records -->
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 mt-8">Health &amp; medication</h2>
+        {% if health_records %}
+            {% include 'partials/_table_open.html' with headers=health_headers %}
+            {% for h in health_records %}
+            <tr>
+                <td class="px-4 py-3 whitespace-nowrap">{{ h.date }}</td>
+                <td class="px-4 py-3 whitespace-nowrap">{{ h.get_record_type_display }}</td>
+                <td class="px-4 py-3">{{ h.name }}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-right">{{ h.cost|money }}</td>
+                {% if can_manage %}
+                <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+                    <a href="{% url 'health_edit' h.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+                    <a href="{% url 'health_delete' h.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% include 'partials/_table_close.html' %}
+        {% else %}
+            {% include 'partials/_empty_state.html' with message='No health records yet.' %}
+        {% endif %}
+
+        <!-- Vaccination status -->
+        {% if vaccination_status %}
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 mt-8">Vaccination schedule</h2>
+        <div class="space-y-2">
+            {% for v in vaccination_status %}
+            <div class="flex items-center justify-between bg-white border border-gray-200 rounded px-4 py-2 text-sm">
+                <span>{{ v.schedule.vaccine_name }} <span class="text-gray-400">· day {{ v.schedule.day_of_age }}</span></span>
+                {% if v.status == 'done' %}<span class="text-emerald-600 text-xs font-medium">Done</span>
+                {% elif v.status == 'overdue' %}<span class="text-red-600 text-xs font-medium">Overdue</span>
+                {% elif v.status == 'due_soon' %}<span class="text-amber-600 text-xs font-medium">Due soon</span>
+                {% else %}<span class="text-gray-400 text-xs">In {{ v.days }}d</span>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Production -->
+        <div class="flex items-center justify-between mb-3 mt-8">
+            <h2 class="text-lg font-semibold text-gray-900">
+                {% if is_layer %}Egg production{% else %}Weight monitoring{% endif %}
+            </h2>
+            {% if fcr %}<span class="text-sm text-gray-500">FCR: <span class="font-semibold text-gray-800">{{ fcr }}</span>{% if is_layer %} kg/dozen{% else %} kg feed/kg gain{% endif %}</span>{% endif %}
+        </div>
+
+        {% if is_layer %}
+            {% if egg_records %}
+                <canvas id="prodChart" height="120" class="mb-4"></canvas>
+                {% include 'partials/_table_open.html' with headers=egg_headers %}
+                {% for e in egg_records %}
+                <tr>
+                    <td class="px-4 py-3 whitespace-nowrap">{{ e.date }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">{{ e.eggs_collected }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">{{ e.eggs_damaged }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">{{ e.hen_day_percentage }}%</td>
+                    {% if can_manage %}
+                    <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+                        <a href="{% url 'egg_edit' e.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+                        <a href="{% url 'egg_delete' e.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                {% include 'partials/_table_close.html' %}
+            {% else %}
+                {% include 'partials/_empty_state.html' with message='No egg records yet.' %}
+            {% endif %}
+        {% else %}
+            {% if weight_records %}
+                <canvas id="prodChart" height="120" class="mb-4"></canvas>
+                {% include 'partials/_table_open.html' with headers=weight_headers %}
+                {% for w in weight_records %}
+                <tr>
+                    <td class="px-4 py-3 whitespace-nowrap">{{ w.date }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">{{ w.sample_size }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">{{ w.average_weight }}</td>
+                    {% if can_manage %}
+                    <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+                        <a href="{% url 'weight_edit' w.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+                        <a href="{% url 'weight_delete' w.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                {% include 'partials/_table_close.html' %}
+            {% else %}
+                {% include 'partials/_empty_state.html' with message='No weight records yet.' %}
+            {% endif %}
+        {% endif %}
+
+        <!-- Finance (management only) -->
+        {% if pl %}
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 mt-8">Financials</h2>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {% include 'partials/_stat_card.html' with label='Income' value=pl.income|money %}
+            {% include 'partials/_stat_card.html' with label='Expense (incl. birds)' value=pl.expense_with_acquisition|money %}
+            {% include 'partials/_stat_card.html' with label='Net' value=pl.net|money %}
+            {% include 'partials/_stat_card.html' with label='Cost per bird' value=pl.cost_per_bird|money %}
+        </div>
+        <p class="mt-3"><a href="{% url 'transaction_add' %}" class="text-sm text-emerald-700 hover:underline">Record a sale / expense &rarr;</a></p>
+        {% endif %}
+    </div>
+</div>
+
+{{ trend|json_script:"trend-data" }}
+<script>
+(function () {
+    const el = document.getElementById('prodChart');
+    if (!el || typeof Chart === 'undefined') return;
+    const data = JSON.parse(document.getElementById('trend-data').textContent);
+    const isLayer = {{ is_layer|yesno:"true,false" }};
+    const datasets = isLayer
+        ? [{ label: 'Eggs collected', data: data.eggs, borderColor: '#059669', tension: 0.3 },
+           { label: 'Hen-day %', data: data.hen_day, borderColor: '#d97706', tension: 0.3, yAxisID: 'y1' }]
+        : [{ label: 'Avg weight (kg)', data: data.weights, borderColor: '#059669', tension: 0.3 }];
+    new Chart(el, {
+        type: 'line',
+        data: { labels: data.labels, datasets: datasets },
+        options: {
+            responsive: true,
+            scales: isLayer
+                ? { y: { beginAtZero: true }, y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } } }
+                : { y: { beginAtZero: true } }
+        }
+    });
+})();
+</script>
+{% endblock %}

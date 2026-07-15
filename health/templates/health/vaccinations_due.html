@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Vaccinations due · Health{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Vaccinations due' subtitle='Overdue and upcoming vaccinations across active batches.' %}
+
+{% if alerts %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500">Batch</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500">Vaccine</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500">Due at (day)</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500">Status</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-500"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for a in alerts %}
+                <tr>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <a href="{% url 'batch_detail' a.batch.pk %}" class="text-emerald-700 hover:underline">{{ a.batch.batch_code }}</a>
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap">{{ a.schedule.vaccine_name }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">day {{ a.schedule.day_of_age }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        {% if a.status == 'overdue' %}
+                        <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">Overdue by {{ a.days|stringformat:'d'|cut:'-' }}d</span>
+                        {% else %}
+                        <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Due in {{ a.days }}d</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 whitespace-nowrap text-right">
+                        <a href="{% url 'health_add' a.batch.pk %}" class="text-emerald-700 hover:underline">Record</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No vaccinations due. Add schedule entries in Settings.' %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    @page { size: A4 landscape; margin: 1.5cm; }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #222; }
+    h1 { font-size: 16px; margin: 0 0 2px; }
+    .period { color: #666; font-size: 10px; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; }
+    th { background: #f0f0f0; }
+    .foot { margin-top: 10px; color: #666; font-size: 9px; }
+</style>
+</head>
+<body>
+    <h1>{{ report.title }}</h1>
+    {% if report.meta.start or report.meta.end %}
+    <div class="period">Period: {{ report.meta.start|default:'…' }} – {{ report.meta.end|default:'…' }}</div>
+    {% endif %}
+
+    <table>
+        <thead>
+            <tr>{% for h in report.headers %}<th>{{ h }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            {% for row in report.rows %}
+            <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% empty %}
+            <tr><td colspan="{{ report.headers|length }}">No data.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="foot">Poultry Farm Record System — generated report.</div>
+</body>
+</html>

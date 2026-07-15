@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load reference_extras %}
+
+{% block title %}{{ title }} · Settings{% endblock %}
+
+{% block content %}
+{% url add_url_name as add_url %}
+{% include 'partials/_page_header.html' with title=title subtitle='Owner-managed reference data.' action_url=add_url action_label='Add' %}
+
+<p class="mb-4"><a href="{% url 'settings' %}" class="text-sm text-emerald-700 hover:underline">&larr; Back to settings</a></p>
+
+{% if objects %}
+    {% include 'partials/_table_open.html' with headers=headers %}
+    {% for obj in objects %}
+    <tr>
+        {% for header, attr in columns %}
+        <td class="px-4 py-3 whitespace-nowrap {% if forloop.first %}font-medium text-gray-900{% else %}text-gray-600{% endif %}">
+            {% col_value obj attr %}
+        </td>
+        {% endfor %}
+        <td class="px-4 py-3 whitespace-nowrap text-right space-x-3">
+            <a href="{% url edit_url_name obj.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+            <a href="{% url delete_url_name obj.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+    {% include 'partials/_table_close.html' %}
+{% else %}
+    {% include 'partials/_empty_state.html' with message='Nothing added yet.' action_url=add_url action_label='Add' %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Users · Poultry Farm Record System{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Users' subtitle='Manage who can access the system and their role.' action_url=add_url action_label='Add user' %}
+
+{% if users %}
+    {% include 'partials/_table_open.html' with headers=headers %}
+    {% for u in users %}
+    <tr>
+        <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900">{{ u.username }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ u.get_full_name|default:'—' }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ u.email|default:'—' }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">
+            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium
+                {% if u.role == 'OWNER' %}bg-purple-100 text-purple-700
+                {% elif u.role == 'MANAGER' %}bg-blue-100 text-blue-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ u.get_role_display }}
+            </span>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap">
+            {% if u.is_active %}
+            <span class="text-emerald-600 text-xs">Active</span>
+            {% else %}
+            <span class="text-red-600 text-xs">Inactive</span>
+            {% endif %}
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+            <a href="{% url 'user_edit' u.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+            {% if u != request.user %}
+            <form method="post" action="{% url 'user_toggle' u.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-sm {% if u.is_active %}text-red-600{% else %}text-emerald-700{% endif %} hover:underline">
+                    {% if u.is_active %}Deactivate{% else %}Reactivate{% endif %}
+                </button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    {% include 'partials/_table_close.html' %}
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No users yet.' action_url=add_url action_label='Add user' %}
+{% endif %}
+{% endblock %}

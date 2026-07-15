@@ -1,0 +1,10 @@
+{% comment %}
+Simple card wrapper for a titled block of content.
+For rich bodies, prefer writing the card shell inline (this same markup)
+around your content. Usage with a plain string body:
+  {% include 'partials/_card.html' with title='Notes' body='Nothing yet.' %}
+{% endcomment %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 {{ extra_class }}">
+    {% if title %}<h2 class="text-lg font-semibold text-gray-900 mb-3">{{ title }}</h2>{% endif %}
+    {% if body %}<div class="text-gray-600">{{ body }}</div>{% endif %}
+</div>

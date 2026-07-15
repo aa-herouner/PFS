@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ report.title }} · Reports{% endblock %}
+
+{% block head_extra %}
+<style>
+@media print {
+    .no-print { display: none !important; }
+    aside, header { display: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+    <div>
+        <h1 class="text-2xl font-semibold text-gray-900">{{ report.title }}</h1>
+        {% if report.meta.start or report.meta.end %}
+        <p class="text-gray-500 mt-1 text-sm">{{ report.meta.start|default:'…' }} – {{ report.meta.end|default:'…' }}</p>
+        {% endif %}
+    </div>
+    <div class="flex gap-2 no-print">
+        <a href="?format=excel{% if filters.start %}&start={{ filters.start }}{% endif %}{% if filters.end %}&end={{ filters.end }}{% endif %}"
+           class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Excel</a>
+        <a href="?format=pdf{% if filters.start %}&start={{ filters.start }}{% endif %}{% if filters.end %}&end={{ filters.end }}{% endif %}"
+           class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">PDF</a>
+        <button onclick="window.print()" class="border border-gray-300 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Print</button>
+    </div>
+</div>
+
+<form method="get" class="flex flex-wrap items-end gap-2 mb-6 no-print">
+    <div>
+        <label class="block text-xs text-gray-500 mb-1">From</label>
+        <input type="date" name="start" value="{{ filters.start }}" class="border border-gray-300 rounded px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-xs text-gray-500 mb-1">To</label>
+        <input type="date" name="end" value="{{ filters.end }}" class="border border-gray-300 rounded px-3 py-2 text-sm">
+    </div>
+    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Apply</button>
+    <a href="{% url 'report_index' %}" class="text-sm text-gray-600 hover:underline ml-2">All reports</a>
+</form>
+
+{% if report.rows %}
+    {% include 'partials/_table_open.html' with headers=report.headers %}
+    {% for row in report.rows %}
+    <tr>
+        {% for cell in row %}
+        <td class="px-4 py-3 whitespace-nowrap {% if forloop.first %}font-medium text-gray-900{% else %}text-gray-600{% endif %}">{{ cell }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    {% include 'partials/_table_close.html' %}
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No data for this report / period.' %}
+{% endif %}
+{% endblock %}

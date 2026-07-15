@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete · Settings{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Delete' %}
+
+<div class="max-w-lg mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <p class="text-gray-700">Delete <span class="font-semibold">{{ object }}</span>? This cannot be undone.</p>
+    <form method="post" class="mt-4 flex items-center gap-3">
+        {% csrf_token %}
+        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded">Delete</button>
+        <a href="javascript:history.back()" class="text-sm text-gray-600 hover:underline">Cancel</a>
+    </form>
+</div>
+{% endblock %}

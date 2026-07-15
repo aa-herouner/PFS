@@ -1,0 +1,24 @@
+{# Sidebar nav links. #}
+{% url 'dashboard' as dashboard_url %}
+<a href="{{ dashboard_url }}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Dashboard</a>
+<a href="{% url 'batch_list' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Flocks</a>
+<a href="{% url 'feed_stock' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Feed</a>
+<a href="{% url 'vaccinations_due' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Health</a>
+<a href="{% url 'batch_list' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Production</a>
+{% if user.is_owner or user.is_manager or user.is_superuser %}
+<a href="{% url 'transaction_list' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Finance</a>
+<a href="{% url 'report_index' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Reports</a>
+{% endif %}
+{% if user.is_owner or user.is_superuser %}
+<a href="{% url 'user_list' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Users</a>
+<a href="{% url 'settings' %}"
+   class="block px-3 py-2 rounded hover:bg-emerald-50 hover:text-emerald-700 font-medium">Settings</a>
+{% endif %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load reference_extras %}
+
+{% block title %}Profit &amp; loss · Finance{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title='Profit & loss' subtitle='Farm-wide and per-batch profitability.' %}
+
+<form method="get" class="flex flex-wrap items-end gap-2 mb-6">
+    <div>
+        <label class="block text-xs text-gray-500 mb-1">From</label>
+        <input type="date" name="start" value="{{ filters.start }}" class="border border-gray-300 rounded px-3 py-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-xs text-gray-500 mb-1">To</label>
+        <input type="date" name="end" value="{{ filters.end }}" class="border border-gray-300 rounded px-3 py-2 text-sm">
+    </div>
+    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Apply</button>
+    <a href="{% url 'transaction_list' %}" class="text-sm text-gray-600 hover:underline ml-2">Back to transactions</a>
+</form>
+
+<div class="grid grid-cols-3 gap-4 mb-8">
+    {% include 'partials/_stat_card.html' with label='Income' value=summary.income|money %}
+    {% include 'partials/_stat_card.html' with label='Expense' value=summary.expense|money %}
+    {% include 'partials/_stat_card.html' with label='Profit' value=summary.profit|money %}
+</div>
+
+<h2 class="text-lg font-semibold text-gray-900 mb-3">Per-batch profit / loss</h2>
+{% if batches %}
+{% include 'partials/_table_open.html' with headers=batch_headers %}
+{% for row in batches %}
+<tr>
+    <td class="px-4 py-3 whitespace-nowrap">
+        <a href="{% url 'batch_detail' row.batch.pk %}" class="text-emerald-700 hover:underline">{{ row.batch.batch_code }}</a>
+    </td>
+    <td class="px-4 py-3 whitespace-nowrap text-right">{{ row.pl.income|money }}</td>
+    <td class="px-4 py-3 whitespace-nowrap text-right">{{ row.pl.expense_with_acquisition|money }}</td>
+    <td class="px-4 py-3 whitespace-nowrap text-right font-medium {% if row.pl.net < 0 %}text-red-600{% else %}text-emerald-700{% endif %}">{{ row.pl.net|money }}</td>
+    <td class="px-4 py-3 whitespace-nowrap text-right">{{ row.pl.cost_per_bird|money }}</td>
+</tr>
+{% endfor %}
+{% include 'partials/_table_close.html' %}
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No batches yet.' %}
+{% endif %}
+
+<h2 class="text-lg font-semibold text-gray-900 mb-3 mt-8">Expense by category</h2>
+{% if expense_categories %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100">
+    {% for row in expense_categories %}
+    <div class="flex justify-between px-4 py-2 text-sm">
+        <span>{{ row.category }}</span>
+        <span class="font-medium">{{ row.total|money }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No expenses in this period.' %}
+{% endif %}
+{% endblock %}

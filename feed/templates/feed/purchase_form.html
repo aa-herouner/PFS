@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} · Feed{% endblock %}
+
+{% block content %}
+{% include 'partials/_page_header.html' with title=title %}
+
+<div class="max-w-lg mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+     x-data='feedPrice({{ form.feed_type_prices|safe }})'>
+    <p class="text-xs text-gray-400 mb-4">Saving posts a matching expense to finance automatically.</p>
+    <form method="post"
+          @change="onFeedTypeChange($event)">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="mb-4 text-sm text-red-600">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}{% include 'partials/_form_field.html' %}{% endfor %}
+        <div class="flex items-center gap-3 mt-2">
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Save</button>
+            <a href="{% url 'feed_stock' %}" class="text-sm text-gray-600 hover:underline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function feedPrice(prices) {
+    return {
+        prices: prices,        // { feedTypeId: "unit_cost" }
+        lastDefault: null,     // the price we last auto-filled, to detect manual edits
+        onFeedTypeChange(e) {
+            if (e.target.id !== 'id_feed_type') return;
+            const cost = document.getElementById('id_unit_cost');
+            if (!cost) return;
+            const def = this.prices[e.target.value];
+            if (def === undefined) return;
+            // Only overwrite if the field is empty or still holds our last prefill
+            // (so a manually typed override is never clobbered).
+            const untouched = cost.value === '' || cost.value === this.lastDefault;
+            if (untouched) cost.value = def;
+            this.lastDefault = def;
+        },
+    };
+}
+</script>
+{% endblock %}

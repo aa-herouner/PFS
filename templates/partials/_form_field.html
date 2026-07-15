@@ -1,0 +1,29 @@
+{% comment %}
+Renders one bound form field, Tailwind-styled. Usage inside a form:
+  {% for field in form %}{% include 'partials/_form_field.html' %}{% endfor %}
+Assumes the view/form adds Tailwind classes to widgets (see core.forms
+StyledFormMixin) OR relies on the base widget styling below via `field`.
+{% endcomment %}
+<div class="mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">
+        {{ field.label }}{% if field.field.required %}<span class="text-red-500"> *</span>{% endif %}
+    </label>
+    {% if field.field.widget.allow_multiple_selected %}
+        {# Multi-select checkboxes rendered inline. #}
+        <div class="flex flex-wrap gap-4 mt-1">
+            {% for choice in field %}
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                {{ choice.tag }}<span>{{ choice.choice_label }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    {% else %}
+        {{ field }}
+    {% endif %}
+    {% if field.help_text %}
+    <p class="mt-1 text-xs text-gray-400">{{ field.help_text }}</p>
+    {% endif %}
+    {% for error in field.errors %}
+    <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+    {% endfor %}
+</div>

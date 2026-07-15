@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load reference_extras %}
+
+{% block title %}Finance · Poultry Farm Record System{% endblock %}
+
+{% block content %}
+<div class="flex items-start justify-between gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Finance</h1>
+        <p class="text-sm text-gray-500 mt-1">Income and expense transactions.</p>
+    </div>
+    {# Add transaction: choose Income or Expense first, then open the form. #}
+    <div class="relative" x-data="{ open: false }" @keydown.escape="open = false">
+        <button type="button" @click="open = !open" @click.away="open = false"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded inline-flex items-center gap-1">
+            Add transaction
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <div x-show="open" x-transition x-cloak
+             class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+            <p class="px-4 py-1 text-xs font-medium text-gray-400 uppercase tracking-wide">New transaction</p>
+            <a href="{% url 'transaction_add' %}?type=INCOME"
+               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span> Income
+            </a>
+            <a href="{% url 'transaction_add' %}?type=EXPENSE"
+               class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-red-50">
+                <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span> Expense
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-3 gap-4 mb-6">
+    {% include 'partials/_stat_card.html' with label='Income' value=totals.income|money %}
+    {% include 'partials/_stat_card.html' with label='Expense' value=totals.expense|money %}
+    {% include 'partials/_stat_card.html' with label='Profit' value=totals.profit|money %}
+</div>
+
+<div class="flex flex-wrap items-center gap-2 mb-4">
+    <a href="{% url 'profit_loss' %}" class="text-sm text-emerald-700 hover:underline">View profit &amp; loss report &rarr;</a>
+    <form method="get" class="flex gap-2 ml-auto">
+        <select name="type" class="border border-gray-300 rounded px-3 py-2 text-sm">
+            <option value="">All types</option>
+            {% for v, l in types %}<option value="{{ v }}" {% if filters.type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+        </select>
+        <select name="source" class="border border-gray-300 rounded px-3 py-2 text-sm">
+            <option value="">All sources</option>
+            {% for v, l in sources %}<option value="{{ v }}" {% if filters.source == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded">Filter</button>
+    </form>
+</div>
+
+{% if transactions %}
+    {% include 'partials/_table_open.html' with headers=table_headers %}
+    {% for t in transactions %}
+    <tr>
+        <td class="px-4 py-3 whitespace-nowrap">{{ t.date }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">
+            <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium {% if t.type == 'INCOME' %}bg-emerald-100 text-emerald-700{% else %}bg-red-100 text-red-700{% endif %}">{{ t.get_type_display }}</span>
+        </td>
+        <td class="px-4 py-3">{{ t.category.name|default:'—' }}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-right font-medium">{{ t.amount|money }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ t.batch.batch_code|default:'—' }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">
+            {% if t.is_readonly %}<span class="text-xs text-gray-400">{{ t.get_source_display }}</span>{% else %}<span class="text-xs text-gray-500">Manual</span>{% endif %}
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+            {% if t.is_readonly %}
+            <span class="text-xs text-gray-400" title="Edit at the source record">read-only</span>
+            {% else %}
+            <a href="{% url 'transaction_edit' t.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+            <a href="{% url 'transaction_delete' t.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    {% include 'partials/_table_close.html' %}
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No transactions yet. Use “Add transaction” above to record income or expense.' %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load reference_extras %}
+
+{% block title %}Feed purchases · Feed{% endblock %}
+
+{% block content %}
+{% if user.is_owner or user.is_manager or user.is_superuser %}
+    {% url 'feed_purchase_add' as add_url %}
+    {% include 'partials/_page_header.html' with title='Feed purchases' action_url=add_url action_label='Record purchase' %}
+{% else %}
+    {% include 'partials/_page_header.html' with title='Feed purchases' %}
+{% endif %}
+
+<p class="mb-4"><a href="{% url 'feed_stock' %}" class="text-sm text-emerald-700 hover:underline">&larr; Back to feed</a></p>
+
+{% if purchases %}
+    {% include 'partials/_table_open.html' with headers=headers %}
+    {% for p in purchases %}
+    <tr>
+        <td class="px-4 py-3 whitespace-nowrap">{{ p.date }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ p.feed_type.name }}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-right">{{ p.quantity }}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-right">{{ p.unit_cost|money }}</td>
+        <td class="px-4 py-3 whitespace-nowrap text-right font-medium">{{ p.total_cost|money }}</td>
+        <td class="px-4 py-3 whitespace-nowrap">{{ p.supplier|default:'—' }}</td>
+        {% if can_manage %}
+        <td class="px-4 py-3 whitespace-nowrap text-right space-x-2">
+            <a href="{% url 'feed_purchase_edit' p.pk %}" class="text-emerald-700 hover:underline text-sm">Edit</a>
+            <a href="{% url 'feed_purchase_delete' p.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    {% include 'partials/_table_close.html' %}
+{% else %}
+    {% include 'partials/_empty_state.html' with message='No purchases yet.' %}
+{% endif %}
+{% endblock %}
