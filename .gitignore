@@ -9,6 +9,12 @@ db.sqlite3-journal
 /media/
 /staticfiles/
 
+# Tailwind standalone CLI binary (~40MB, downloadable tool, not source).
+# The COMPILED output static/css/styles.css IS committed so the app runs
+# offline without the binary. Re-download only when you need to rebuild.
+tailwindcss.exe
+tailwindcss
+
 # Environment
 .env
 

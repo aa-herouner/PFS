@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Project-wide small helpers that were inline in base.html. */
+[x-cloak] {
+    display: none !important;
+}

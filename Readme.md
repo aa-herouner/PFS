@@ -37,7 +37,9 @@ Built as a server-rendered Django application (no SPA, no REST API).
 
 - **Django 5.2 LTS** (Python 3.12), server-rendered templates
 - **SQLite** (default; PostgreSQL is the intended production target)
-- **Tailwind CSS** (Play CDN in dev), **Alpine.js**, **Chart.js**
+- **Tailwind CSS** (self-hosted, compiled offline via the standalone CLI),
+  **Alpine.js** and **Chart.js** (vendored in `static/js/`) — no CDN; the app
+  runs with no internet connection
 - **openpyxl** (Excel export), **xhtml2pdf** (PDF export)
 - **python-decouple** for environment-based configuration
 
@@ -141,6 +143,17 @@ Every domain model inherits an abstract `BaseModel` providing a
 
 - **Money & counts:** money and weights use `DecimalField`; bird counts and eggs
   use `PositiveIntegerField`.
-- **Tailwind** is loaded via the Play CDN for development; for production, build a
-  compiled stylesheet with the standalone Tailwind CLI.
+- **Front-end assets are self-hosted (offline).** Tailwind is compiled to
+  `static/css/styles.css` with the **standalone Tailwind CLI** (no Node needed);
+  Alpine.js and Chart.js are vendored in `static/js/`. `base.html` loads all
+  three via `{% static %}`, so the app needs no internet at runtime.
+  - **Rebuild the CSS** after adding/changing template classes:
+    `./build_css.ps1` (or `./build_css.ps1 -Watch` while developing). It runs
+    `tailwindcss.exe -c tailwind.config.js -i tailwind/input.css -o
+    static/css/styles.css --minify`.
+  - The `tailwindcss.exe` binary (~40 MB) is git-ignored; download it once from
+    the Tailwind releases page if you need to rebuild. The compiled
+    `static/css/styles.css` is committed, so running the app needs no build step.
+  - `tailwind.config.js` `content` globs scan all templates **and** `.py` files
+    so no used class is purged.
 - **PDF export** uses xhtml2pdf (pure-Python, no system libraries required).

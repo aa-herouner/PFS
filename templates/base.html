@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Poultry Farm Record System{% endblock %}</title>
 
-    {# Tailwind Play CDN for dev; replace with compiled CSS for prod. #}
-    <script src="https://cdn.tailwindcss.com"></script>
+    {# Self-hosted assets (no CDN) so the app works fully offline. #}
+    {# Tailwind: compiled by the standalone CLI to static/css/styles.css. #}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     {# Alpine.js for lightweight interactivity #}
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="{% static 'js/alpine.min.js' %}"></script>
     {# Chart.js for dashboard charts #}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-    <style>[x-cloak] { display: none !important; }</style>
+    <script src="{% static 'js/chart.min.js' %}"></script>
     {% block head_extra %}{% endblock %}
 </head>
 <body class="h-full bg-gray-100 text-gray-800">
